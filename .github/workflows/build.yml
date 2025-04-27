@@ -43,13 +43,13 @@ jobs:
         run: melos run build_android_release
       
       - name: Upload debug APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/app/outputs/flutter-apk/app-debug.apk
       
       - name: Upload release APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: app/build/app/outputs/flutter-apk/app-release.apk
@@ -80,7 +80,7 @@ jobs:
         run: melos run build_ios_debug
       
       - name: Upload iOS build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-build
           path: app/build/ios/iphoneos
