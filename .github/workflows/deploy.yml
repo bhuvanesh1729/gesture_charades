@@ -1,0 +1,132 @@
+name: Deploy to App Store and Play Store
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy_android:
+    name: Deploy Android App to Play Store
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install Melos
+        run: dart pub global activate melos
+      
+      - name: Install dependencies
+        run: melos bootstrap
+      
+      - name: Decode keystore
+        env:
+          ENCODED_KEYSTORE: ${{ secrets.ENCODED_KEYSTORE }}
+          KEYSTORE_PATH: ${{ github.workspace }}/app/android/app/keystore.jks
+        run: |
+          echo $ENCODED_KEYSTORE | base64 -d > $KEYSTORE_PATH
+      
+      - name: Build Android App Bundle
+        env:
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PATH: ${{ github.workspace }}/app/android/app/keystore.jks
+        run: |
+          cd app
+          if [ "${{ github.event.inputs.environment }}" == "production" ] || [ -z "${{ github.event.inputs.environment }}" ]; then
+            flutter build appbundle --release --flavor prod --target lib/main_prod.dart \
+              --build-number=${{ github.run_number }} \
+              --dart-define=ENV=prod
+          else
+            flutter build appbundle --release \
+              --build-number=${{ github.run_number }} \
+              --dart-define=ENV=staging
+          fi
+      
+      - name: Upload App Bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-bundle
+          path: app/build/app/outputs/bundle/release/app-release.aab
+      
+      - name: Deploy to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.bhuvanesh1729.gesture_charades
+          releaseFiles: app/build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+          inAppUpdatePriority: 3
+          whatsNewDirectory: distribution/whatsnew
+
+  deploy_ios:
+    name: Deploy iOS App to App Store
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install Melos
+        run: dart pub global activate melos
+      
+      - name: Install dependencies
+        run: melos bootstrap
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+      
+      - name: Install Fastlane
+        run: |
+          cd app/ios
+          gem install bundler
+          bundle install
+      
+      - name: Build and Deploy iOS App
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_APPLE_ID: ${{ secrets.FASTLANE_APPLE_ID }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+        run: |
+          cd app/ios
+          if [ "${{ github.event.inputs.environment }}" == "production" ] || [ -z "${{ github.event.inputs.environment }}" ]; then
+            bundle exec fastlane release
+          else
+            bundle exec fastlane beta
+          fi

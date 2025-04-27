@@ -1,0 +1,41 @@
+name: gesture_charades
+description: A dumb charades game with swipe and motion gestures.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  shared_preferences: ^2.2.0
+  sensors: ^2.0.3
+  cupertino_icons: ^1.0.5
+  confetti: ^0.7.0
+  flutter_svg: ^2.0.9
+  core_models:
+    path: ../packages/core_models
+  language_pack:
+    path: ../packages/language_pack
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/sounds/
+  
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Roboto-Italic.ttf
+          style: italic

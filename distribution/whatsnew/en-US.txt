@@ -1,0 +1,15 @@
+🎮 Gesture Charades v1.0.0 🎮
+
+Initial release of Gesture Charades!
+
+Features:
+• Random word generator with multiple categories
+• Swipe-up gesture to get the next word
+• Phone flip detection for hands-free operation
+• Timer countdown for each round
+• Score tracking for correct guesses
+• Team mode for competitive play
+• Dark mode support
+• Multiple language support
+
+Have fun playing Gesture Charades with your friends and family!

@@ -1,0 +1,63 @@
+name: gesture_charades
+repository: https://github.com/bhuvanesh1729/gesture_charades
+
+packages:
+  - app
+  - packages/**
+
+scripts:
+  analyze:
+    description: Run Flutter analyze for all packages
+    run: melos exec -- flutter analyze
+    
+  format:
+    description: Format Dart code
+    run: melos exec -- dart format .
+    
+  test:
+    description: Run tests for all packages
+    run: melos exec -- flutter test
+    
+  clean:
+    description: Clean all build directories
+    run: melos exec -- flutter clean
+    
+  pub_get:
+    description: Run pub get for all packages
+    run: melos exec -- flutter pub get
+    
+  build_android_debug:
+    description: Build debug APK
+    run: cd app && flutter build apk --debug
+    
+  build_android_release:
+    description: Build release APK
+    run: cd app && flutter build apk --release
+    
+  build_android_prod:
+    description: Build production APK with specific configurations
+    run: cd app && flutter build apk --release --flavor prod --target lib/main_prod.dart
+    
+  build_ios_debug:
+    description: Build debug iOS app
+    run: cd app && flutter build ios --debug --no-codesign
+    
+  build_ios_release:
+    description: Build release iOS app
+    run: cd app && flutter build ios --release
+    
+  build_ios_prod:
+    description: Build production iOS app with specific configurations
+    run: cd app && flutter build ios --release --flavor prod --target lib/main_prod.dart
+    
+  generate_all:
+    description: Generate all generated code
+    run: melos run generate_models && melos run generate_l10n
+    
+  generate_models:
+    description: Generate model code
+    run: cd packages/core_models && flutter pub run build_runner build --delete-conflicting-outputs
+    
+  generate_l10n:
+    description: Generate localization files
+    run: cd app && flutter pub run intl_utils:generate
